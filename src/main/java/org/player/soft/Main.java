@@ -11,8 +11,8 @@ public class Main {
             setupLookAndFeel();
 
             PlayerView view = new PlayerView();
-            FrameLoggerRepository repository = new FrameLoggerRepository();
-            new PlayerController(view, repository);
+            AsyncFrameLogProcessor logProcessor = new AsyncFrameLogProcessor();
+            new PlayerController(view, logProcessor);
 
             view.setVisible(true);
         });

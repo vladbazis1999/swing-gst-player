@@ -18,14 +18,14 @@ import java.util.concurrent.TimeUnit;
 
 public class PlayerController {
     private final PlayerView view;
-    private final FrameLoggerRepository repository;
+    private final AsyncFrameLogProcessor frameLogProcessor;
     private final PlayBin playBin;
     private final Timer uiUpdateTimer;
     private boolean isSeeking = false;
 
-    public PlayerController(PlayerView view, FrameLoggerRepository repository) {
+    public PlayerController(PlayerView view, AsyncFrameLogProcessor frameLogProcessor) {
         this.view = view;
-        this.repository = repository;
+        this.frameLogProcessor = frameLogProcessor;
 
         this.playBin = new PlayBin("VideoPlayer");
         this.playBin.setVideoSink(view.getVideoComponent().getElement());
@@ -44,7 +44,7 @@ public class PlayerController {
 
         appSink.connect((AppSink.NEW_SAMPLE) _ -> {
             long currentUnixTimeMs = System.currentTimeMillis();
-            repository.logFrameTimestamp(currentUnixTimeMs);
+            frameLogProcessor.onFrameTimestamp(currentUnixTimeMs);
             return FlowReturn.OK;
         });
     }
@@ -90,7 +90,7 @@ public class PlayerController {
                 uiUpdateTimer.stop();
                 playBin.stop();
                 playBin.dispose();
-                repository.close();
+                frameLogProcessor.close();
             }
         });
     }
@@ -110,7 +110,7 @@ public class PlayerController {
     private void loadVideo(File file) {
         stopPlayback();
         try {
-            repository.initForVideo(file);
+            frameLogProcessor.startForVideo(file);
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(view, "Не удалось создать БД: " + ex.getMessage(), "Ошибка БД", JOptionPane.ERROR_MESSAGE);
             return;
